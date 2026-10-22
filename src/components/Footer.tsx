@@ -16,6 +16,7 @@ const footerGroups: FooterGroup[] = [
     title: 'Product',
     links: [
       { label: 'Features', href: '#features' },
+      { label: 'Video Studio', href: '#video' },
       { label: 'Supported Formats', href: '#supported-formats' },
       { label: 'FAQ', href: '#faq' },
     ],

@@ -3,7 +3,7 @@ import { Menu, X, ArrowLeft, ChevronDown } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
 
 interface HeaderProps {
-  currentPage?: 'home' | 'converter';
+  currentPage?: 'home' | 'converter' | 'video';
   activeToolId?: string;
   onNavigateHome?: () => void;
   onNavigateTool?: (toolId: string) => void;
@@ -15,7 +15,7 @@ export function PixavoLogo({ onClick }: { onClick?: () => void }) {
       onClick={onClick}
       className="inline-flex items-center gap-2.5 text-slate-900 cursor-pointer group"
     >
-      <span className="relative h-9 w-9 overflow-hidden rounded-xl bg-blue-600 flex items-center justify-center text-white font-black shadow-sm group-hover:scale-105 transition-transform duration-200">
+      <span className="relative h-9 w-9 overflow-hidden flex items-center justify-center text-white font-black group-hover:scale-105 transition-transform duration-200">
         <img
           src={logoUrl}
           alt="Pixavo"
@@ -51,14 +51,14 @@ export function Header({ currentPage = 'home', onNavigateHome }: HeaderProps) {
       }`}
     >
       <nav
-        className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
+        className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
         aria-label="Main navigation"
       >
         <div className="flex items-center gap-8">
           <PixavoLogo onClick={() => { closeMenu(); if (onNavigateHome) onNavigateHome(); }} />
 
           {/* Center Navigation matching Picflow header */}
-          <div className="hidden lg:flex items-center gap-6 text-sm font-semibold text-slate-700">
+          <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 text-sm font-semibold text-slate-700">
             <div className="relative group cursor-pointer flex items-center gap-1 hover:text-slate-900">
               <span>Product</span>
               <ChevronDown className="w-3.5 h-3.5 opacity-60" />
@@ -73,12 +73,16 @@ export function Header({ currentPage = 'home', onNavigateHome }: HeaderProps) {
             <a href="#select-tools" className="hover:text-slate-900">
               Tools
             </a>
+            <a href="#video" className="inline-flex items-center gap-1.5 hover:text-slate-900">
+              Video
+              <span className="rounded-full bg-brand-violet px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">New</span>
+            </a>
           </div>
         </div>
 
         {/* Right Action buttons matching Picflow header */}
         <div className="hidden lg:flex items-center gap-5">
-          {currentPage === 'converter' && (
+          {currentPage !== 'home' && (
             <button
               onClick={() => { closeMenu(); if (onNavigateHome) onNavigateHome(); }}
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer"
@@ -120,6 +124,9 @@ export function Header({ currentPage = 'home', onNavigateHome }: HeaderProps) {
         <div className="lg:hidden border-t border-slate-100 bg-white px-4 py-5 space-y-4">
           <a href="#select-tools" onClick={closeMenu} className="block text-sm font-semibold text-slate-800">
             Image Tools
+          </a>
+          <a href="#video" onClick={closeMenu} className="block text-sm font-semibold text-slate-800">
+            Video Studio <span className="ml-1 rounded-full bg-brand-violet px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">New</span>
           </a>
           <a href="#features" onClick={closeMenu} className="block text-sm font-semibold text-slate-800">
             Product Features
