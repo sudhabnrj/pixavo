@@ -8,7 +8,7 @@ import { TOOL_ROUTES } from './src/utils/toolCatalog'
 import { getPageSeo, renderSeoTags } from './src/utils/seo'
 
 // GitHub Pages serves the site from /<repo>/. Override with VITE_BASE for other hosts (e.g. VITE_BASE=/).
-const PROD_BASE = process.env.VITE_BASE ?? '/Pixavo-Image-Conversion/'
+const PROD_BASE = process.env.VITE_BASE ?? '/pixavo/'
 // Absolute public URL used for canonical links, Open Graph and the sitemap. Must end with "/".
 const SITE_URL = process.env.VITE_SITE_URL ?? `https://sudhabnrj.github.io${PROD_BASE}`
 

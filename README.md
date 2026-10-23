@@ -6,7 +6,7 @@
 
 Fast, secure, and privacy-focused image conversion directly in your browser.
 
-🌐 Live Demo: [https://sudhabnrj.github.io/Pixavo-Image-Conversion/]
+🌐 Live Demo: [https://sudhabnrj.github.io/pixavo/]
 
 </div>
 
