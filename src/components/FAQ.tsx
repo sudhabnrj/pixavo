@@ -1,44 +1,14 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 
-interface FAQItem {
-  question: string;
-  answer: string;
-}
-
-const faqItems: FAQItem[] = [
-  {
-    question: 'Does Pixavo upload images?',
-    answer: 'No. Your images are decoded and converted locally in your browser and never sent to a server.',
-  },
-  {
-    question: 'Is Pixavo free?',
-    answer: 'Yes. You can use the browser-based converter without an account, subscription, or installation.',
-  },
-  {
-    question: 'Which RAW formats are supported?',
-    answer: 'Pixavo supports common camera formats including CR2, CR3, NEF, ARW, RW2, RAF, ORF, PEF, DNG, and RAW. Support can vary by camera model and file variant.',
-  },
-  {
-    question: 'Does conversion affect quality?',
-    answer: 'JPEG is a compressed format, but Pixavo gives you direct control over output quality and dimensions so you can choose the right balance for your needs.',
-  },
-  {
-    question: 'Can I convert multiple files?',
-    answer: 'Yes. Add multiple images to the queue, convert them as a batch, and download successful results together as a ZIP file.',
-  },
-  {
-    question: 'Is my data secure?',
-    answer: 'Yes. Processing stays on your device, so your photos are not stored in a database or exposed through a cloud upload.',
-  },
-];
+import { FAQ_ITEMS } from '../utils/faqData';
 
 export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
     <div className="mx-auto max-w-3xl divide-y divide-slate-100 overflow-hidden rounded-3xl border border-slate-100 bg-white/80 shadow-sm backdrop-blur-md">
-      {faqItems.map((item, index) => {
+      {FAQ_ITEMS.map((item, index) => {
         const isOpen = openIndex === index;
         const panelId = `faq-panel-${index}`;
         const buttonId = `faq-button-${index}`;

@@ -1,9 +1,13 @@
 import { ShieldCheck } from 'lucide-react';
 import { PixavoLogo } from './Header';
+import { Link } from './Link';
 
 interface FooterLink {
   label: string;
-  href: string;
+  /** Route slug; defaults to the home page. */
+  to?: string;
+  /** Section anchor on that page. */
+  hash?: string;
 }
 
 interface FooterGroup {
@@ -15,25 +19,25 @@ const footerGroups: FooterGroup[] = [
   {
     title: 'Product',
     links: [
-      { label: 'Features', href: '#features' },
-      { label: 'Video Studio', href: '#video' },
-      { label: 'Supported Formats', href: '#supported-formats' },
-      { label: 'FAQ', href: '#faq' },
+      { label: 'Features', hash: 'features' },
+      { label: 'Video Studio', to: 'video-studio' },
+      { label: 'Supported Formats', hash: 'supported-formats' },
+      { label: 'FAQ', hash: 'faq' },
     ],
   },
   {
     title: 'Resources',
     links: [
-      { label: 'Blog', href: '#blog' },
-      { label: 'Privacy Policy', href: '#privacy-policy' },
-      { label: 'Terms of Service', href: '#terms-of-service' },
+      { label: 'Blog', hash: 'blog' },
+      { label: 'Privacy Policy', hash: 'privacy-policy' },
+      { label: 'Terms of Service', hash: 'terms-of-service' },
     ],
   },
   {
     title: 'Company',
     links: [
-      { label: 'Contact', href: '#contact' },
-      { label: 'About', href: '#about' },
+      { label: 'Contact', hash: 'contact' },
+      { label: 'About', hash: 'about' },
     ],
   },
 ];
@@ -44,11 +48,11 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
-            <a href="#converter" aria-label="Pixavo home">
+            <Link to="" aria-label="Pixavo home">
               <PixavoLogo />
-            </a>
+            </Link>
             <p className="max-w-xs text-sm leading-6 text-slate-500 font-medium">
-              Convert RAW images to JPG instantly in your browser.
+              Convert images and videos instantly in your browser — nothing is ever uploaded.
             </p>
           </div>
 
@@ -60,12 +64,13 @@ export function Footer() {
               <ul className="space-y-3">
                 {group.links.map((link) => (
                   <li key={link.label}>
-                    <a
-                      href={link.href}
+                    <Link
+                      to={link.to ?? ''}
+                      hash={link.hash}
                       className="text-sm font-semibold text-slate-500 transition-colors hover:text-slate-900"
                     >
                       {link.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>

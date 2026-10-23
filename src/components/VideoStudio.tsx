@@ -21,6 +21,9 @@ import {
   X,
 } from 'lucide-react';
 import type { VideoCodec } from 'mediabunny';
+import { Link } from './Link';
+import { videoTools } from '../utils/conversionTools';
+import type { VideoTool } from '../utils/conversionTools';
 
 import {
   VIDEO_CODEC_LABELS,
@@ -37,6 +40,7 @@ import {
 import type { CropRect, RunningVideoJob, VideoFormatId, VideoJob, VideoProbe, VideoQuality } from '../utils/videoEngine';
 
 interface VideoStudioProps {
+  tool: VideoTool;
   file: File | null;
   onFileChange: (file: File | null) => void;
   onNavigateHome: () => void;
@@ -250,9 +254,20 @@ function CropOverlay({ rect, onChange, ratio, W, H }: {
   );
 }
 
+/** Container matching the uploaded file, so crop/resize keep the original format by default. */
+const sourceFormat = (name: string): VideoFormatId => {
+  const ext = name.split('.').pop()?.toLowerCase();
+  if (ext === 'mov') return 'mov';
+  if (ext === 'webm') return 'webm';
+  if (ext === 'mkv') return 'mkv';
+  return 'mp4';
+};
+
 /* ───────────── studio (one loaded file) ───────────── */
 
-function Studio({ file, onReplace, onClose }: { file: File; onReplace: (f: File) => void; onClose: () => void }) {
+function Studio({ file, tool, onReplace, onClose }: { file: File; tool: VideoTool; onReplace: (f: File) => void; onClose: () => void }) {
+  const showCrop = tool.mode === 'studio' || tool.mode === 'crop';
+  const showResize = tool.mode === 'studio' || tool.mode === 'resize';
   const previewUrl = useObjectUrl(file);
   const videoRef = useRef<HTMLVideoElement>(null);
   const replaceInput = useRef<HTMLInputElement>(null);
@@ -263,12 +278,14 @@ function Studio({ file, onReplace, onClose }: { file: File; onReplace: (f: File)
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
 
-  const [cropOn, setCropOn] = useState(false);
+  const [cropOn, setCropOn] = useState(tool.mode === 'crop');
   const [rect, setRect] = useState<Rect>(FULL);
   const [aspect, setAspect] = useState<AspectId>('free');
   const [resize, setResize] = useState<ResizeId>('original');
   const [customWidth, setCustomWidth] = useState(0);
-  const [format, setFormat] = useState<VideoFormatId>('mp4');
+  const [format, setFormat] = useState<VideoFormatId>(
+    tool.mode === 'crop' || tool.mode === 'resize' ? sourceFormat(file.name) : tool.targetFormat ?? 'mp4',
+  );
   const [codec, setCodec] = useState<VideoCodec | 'auto'>('auto');
   const [quality, setQuality] = useState<VideoQuality>('very-high');
   const [encodable, setEncodable] = useState<VideoCodec[] | null>(null);
@@ -483,7 +500,7 @@ function Studio({ file, onReplace, onClose }: { file: File; onReplace: (f: File)
             <input
               ref={replaceInput}
               type="file"
-              accept={`video/*,${VIDEO_EXTENSIONS.join(',')}`}
+              accept={`video/*,${(tool.accept ?? VIDEO_EXTENSIONS).join(',')}`}
               className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) onReplace(f); e.target.value = ''; }}
             />
@@ -527,11 +544,13 @@ function Studio({ file, onReplace, onClose }: { file: File; onReplace: (f: File)
       <div className="space-y-4 lg:sticky lg:top-28">
       <fieldset disabled={busy || !probe} className="space-y-4">
         {/* Crop */}
+        {showCrop && (
         <section className="rounded-[1.75rem] border border-slate-200/80 bg-white p-5">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-sm font-extrabold text-slate-900">
               <Crop className="h-4 w-4 text-brand-violet" /> Crop
             </h2>
+            {tool.mode === 'studio' && (
             <button
               type="button"
               role="switch"
@@ -542,6 +561,7 @@ function Studio({ file, onReplace, onClose }: { file: File; onReplace: (f: File)
               <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${cropOn ? 'translate-x-5' : 'translate-x-0'}`} />
               <span className="sr-only">Enable crop</span>
             </button>
+            )}
           </div>
           {cropOn && (
             <div className="mt-4 space-y-3">
@@ -575,8 +595,10 @@ function Studio({ file, onReplace, onClose }: { file: File; onReplace: (f: File)
             </div>
           )}
         </section>
+        )}
 
         {/* Resize */}
+        {showResize && (
         <section className="rounded-[1.75rem] border border-slate-200/80 bg-white p-5">
           <h2 className="flex items-center gap-2 text-sm font-extrabold text-slate-900">
             <Maximize2 className="h-4 w-4 text-brand-violet" /> Resize
@@ -619,6 +641,7 @@ function Studio({ file, onReplace, onClose }: { file: File; onReplace: (f: File)
             Output: <span className="font-bold text-slate-900">{outW}×{outH}</span>
           </p>
         </section>
+        )}
 
         {/* Format */}
         <section className="rounded-[1.75rem] border border-slate-200/80 bg-white p-5">
@@ -732,7 +755,10 @@ function Studio({ file, onReplace, onClose }: { file: File; onReplace: (f: File)
 
 /* ───────────── page ───────────── */
 
-export default function VideoStudio({ file, onFileChange, onNavigateHome }: VideoStudioProps) {
+export default function VideoStudio({ tool, file, onFileChange, onNavigateHome }: VideoStudioProps) {
+  const titleWords = tool.title.split(' ');
+  const titleTail = titleWords.pop();
+  const acceptLabel = tool.accept ? tool.accept.map((e) => e.slice(1).toUpperCase()).join(', ') : 'MP4, MOV, WebM, MKV or TS';
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -757,7 +783,9 @@ export default function VideoStudio({ file, onFileChange, onNavigateHome }: Vide
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
           <button type="button" onClick={onNavigateHome} className="hover:text-brand-violet cursor-pointer">Home</button>
           <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
-          <span className="font-bold text-slate-800">Video Studio</span>
+          <span>Video tools</span>
+          <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+          <span className="font-bold text-slate-800">{tool.title}</span>
         </div>
         <button
           type="button"
@@ -774,11 +802,10 @@ export default function VideoStudio({ file, onFileChange, onNavigateHome }: Vide
             <Sparkles className="h-3 w-3" /> New · 100% in-browser
           </span>
           <h1 className="mt-4 text-[clamp(2.25rem,5vw,3.75rem)] font-extrabold leading-[1] tracking-[-0.04em] text-slate-950">
-            Video <span className="font-display font-normal italic text-gradient">Studio</span>
+            {titleWords.join(' ')} <span className="font-display font-normal italic text-gradient">{titleTail}</span>
           </h1>
           <p className="mt-3 max-w-xl text-base leading-7 text-slate-500">
-            Crop, resize and convert videos without uploading them. When nothing visual changes, Pixavo copies the
-            original streams for a truly lossless result.
+            {tool.desc} Your video never leaves your device.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs font-bold text-slate-600">
@@ -796,7 +823,7 @@ export default function VideoStudio({ file, onFileChange, onNavigateHome }: Vide
       )}
 
       {file ? (
-        <Studio key={`${file.name}-${file.size}-${file.lastModified}`} file={file} onReplace={onFileChange} onClose={() => onFileChange(null)} />
+        <Studio key={`${tool.id}-${file.name}-${file.size}-${file.lastModified}`} file={file} tool={tool} onReplace={onFileChange} onClose={() => onFileChange(null)} />
       ) : (
         <div
           {...dragProps}
@@ -810,7 +837,7 @@ export default function VideoStudio({ file, onFileChange, onNavigateHome }: Vide
               <Upload className="h-7 w-7" />
             </span>
             <h2 className="mt-6 text-2xl font-extrabold tracking-tight text-slate-950">Drop a video to get started</h2>
-            <p className="mt-2 text-sm text-slate-500">MP4, MOV, WebM, MKV or TS · processed on your device, never uploaded</p>
+            <p className="mt-2 text-sm text-slate-500">{acceptLabel} · processed on your device, never uploaded</p>
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
@@ -822,13 +849,36 @@ export default function VideoStudio({ file, onFileChange, onNavigateHome }: Vide
             <input
               ref={inputRef}
               type="file"
-              accept={`video/*,${VIDEO_EXTENSIONS.join(',')}`}
+              accept={`video/*,${(tool.accept ?? VIDEO_EXTENSIONS).join(',')}`}
               className="hidden"
               onChange={(e) => { accept(e.target.files); e.target.value = ''; }}
             />
           </div>
         </div>
       )}
+
+      {/* Switch to another video tool */}
+      <nav aria-label="More video tools" className="mt-12 border-t border-slate-200/70 pt-8">
+        <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">More video tools</p>
+        <div className="flex flex-wrap gap-2">
+          {videoTools.map((t) => {
+            const Icon = t.icon;
+            const active = t.id === tool.id;
+            return (
+              <Link
+                key={t.id}
+                to={t.slug}
+                aria-current={active ? 'page' : undefined}
+                className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+                  active ? 'bg-slate-950 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:border-brand-violet/40 hover:text-brand-violet'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" /> {t.title}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

@@ -14,13 +14,19 @@ import {
   revokeObjectUrl,
 } from './utils/memory';
 import type { ImageFile, ConversionSettings, CameraMetadata } from './types';
-import { conversionTools, getToolById } from './utils/conversionTools';
+import { getToolById, getVideoToolById } from './utils/conversionTools';
+import { routeForSlug } from './utils/toolCatalog';
+import { navigate, navigateToTool, redirectLegacyHash, useSlug } from './router';
+import { Link } from './components/Link';
+import { applyPageSeo } from './seoHead';
 import { convertSingleImage } from './utils/converter';
 
 function App() {
-  const [page, setPage] = useState<'home' | 'converter' | 'video'>('home');
+  const slug = useSlug();
+  const route = routeForSlug(slug);
+  const page = !slug ? 'home' : route?.kind === 'image' ? 'converter' : route?.kind === 'video' ? 'video' : 'notfound';
+  const activeToolId = route?.kind === 'image' ? route.id : 'raw-jpg';
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [activeToolId, setActiveToolId] = useState<string>('raw-jpg');
   const [files, setFiles] = useState<ImageFile[]>([]);
   const filesRef = useRef<ImageFile[]>([]);
   const isMountedRef = useRef(true);
@@ -33,29 +39,15 @@ function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [globalProgress, setGlobalProgress] = useState(0);
 
-  // Sync hash routing
+  // Old #convert/... and #video links now live at their own URLs.
   useEffect(() => {
-    const parseHash = () => {
-      const hash = window.location.hash;
-      if (hash.startsWith('#convert/')) {
-        const toolId = hash.replace('#convert/', '');
-        if (conversionTools.some(t => t.id === toolId)) {
-          setActiveToolId(toolId);
-          setPage('converter');
-          return;
-        }
-      }
-      if (hash === '#video') {
-        setPage('video');
-        return;
-      }
-      setPage('home');
-    };
-
-    parseHash();
-    window.addEventListener('hashchange', parseHash);
-    return () => window.removeEventListener('hashchange', parseHash);
+    redirectLegacyHash();
   }, []);
+
+  // Keep title, description, canonical, Open Graph and structured data in sync with the page.
+  useEffect(() => {
+    applyPageSeo(slug);
+  }, [slug]);
 
   useEffect(() => {
     filesRef.current = files;
@@ -69,25 +61,14 @@ function App() {
     };
   }, []);
 
-  const handleSelectTool = (toolId: string) => {
-    setActiveToolId(toolId);
-    setPage('converter');
-    window.location.hash = `convert/${toolId}`;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const handleSelectTool = navigateToTool;
 
   const handleOpenVideo = (file?: File) => {
     if (file) setVideoFile(file);
-    setPage('video');
-    window.location.hash = 'video';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigate('video-studio');
   };
 
-  const handleNavigateHome = () => {
-    setPage('home');
-    window.location.hash = 'home';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const handleNavigateHome = () => navigate('');
 
   // Extract EXIF camera metadata
   const getMetadata = async (file: File): Promise<CameraMetadata | undefined> => {
@@ -313,9 +294,7 @@ function App() {
     <div className="min-h-screen bg-gradient-to-b from-slate-50/50 via-white to-slate-50/30 text-slate-800">
       <Header
         currentPage={page}
-        activeToolId={activeToolId}
         onNavigateHome={handleNavigateHome}
-        onNavigateTool={handleSelectTool}
       />
 
       <main>
@@ -336,10 +315,24 @@ function App() {
             isProcessing={isProcessing}
             globalProgress={globalProgress}
           />
-        ) : page === 'video' ? (
+        ) : page === 'video' && route ? (
           <Suspense fallback={<div className="min-h-screen" />}>
-            <VideoStudio file={videoFile} onFileChange={setVideoFile} onNavigateHome={handleNavigateHome} />
+            <VideoStudio
+              tool={getVideoToolById(route.id)!}
+              file={videoFile}
+              onFileChange={setVideoFile}
+              onNavigateHome={handleNavigateHome}
+            />
           </Suspense>
+        ) : page === 'notfound' ? (
+          <section className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-4 pt-24 text-center">
+            <p className="font-mono text-sm font-bold text-brand-violet">404</p>
+            <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-950">This page doesn’t exist</h1>
+            <p className="mt-3 text-slate-500">The tool you’re looking for may have moved.</p>
+            <Link to="" className="mt-8 rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white">
+              Browse all tools
+            </Link>
+          </section>
         ) : (
           <LandingPage onSelectTool={handleSelectTool} onFilesAdded={handleFilesAdded} onOpenVideo={handleOpenVideo} />
         )}

@@ -30,6 +30,8 @@ import {
 } from 'lucide-react';
 
 import { FAQ } from './FAQ';
+import { hrefFor } from '../router';
+import { Link } from './Link';
 import { conversionTools } from '../utils/conversionTools';
 import type { ConversionTool } from '../utils/conversionTools';
 import { VIDEO_EXTENSIONS } from '../utils/videoExtensions';
@@ -340,7 +342,8 @@ export function LandingPage({ onSelectTool, onFilesAdded, onOpenVideo }: Landing
         <div className="relative mx-auto grid max-w-7xl items-center gap-16 px-4 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-12 lg:px-8">
           <div>
             <motion.a
-              href="#video"
+              href={hrefFor('video-studio')}
+              onClick={(e) => { e.preventDefault(); onOpenVideo(); }}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
@@ -561,18 +564,22 @@ export function LandingPage({ onSelectTool, onFilesAdded, onOpenVideo }: Landing
             />
             <div className="mt-10 space-y-5">
               {[
-                { icon: Crop, title: 'Crop', text: 'Free-form or 16:9, 9:16, 1:1, 4:5 — drag the frame right on the preview.' },
-                { icon: Maximize2, title: 'Resize', text: '4K, 1440p, 1080p, 720p or a custom width, always keeping the aspect ratio.' },
-                { icon: Film, title: 'Convert', text: 'MP4, MOV, WebM and MKV with H.264, HEVC, VP9 or AV1 at maximum quality.' },
-              ].map(({ icon: Icon, title, text }, i) => (
-                <motion.div key={title} {...reveal} transition={{ ...reveal.transition, delay: i * 0.08 }} className="flex gap-4">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <h3 className="font-extrabold text-slate-950">{title}</h3>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">{text}</p>
-                  </div>
+                { icon: Crop, to: 'crop-video', title: 'Crop', text: 'Free-form or 16:9, 9:16, 1:1, 4:5 — drag the frame right on the preview.' },
+                { icon: Maximize2, to: 'resize-video', title: 'Resize', text: '4K, 1440p, 1080p, 720p or a custom width, always keeping the aspect ratio.' },
+                { icon: Film, to: 'video-converter', title: 'Convert', text: 'MP4, MOV, WebM and MKV with H.264, HEVC, VP9 or AV1 at maximum quality.' },
+              ].map(({ icon: Icon, to, title, text }, i) => (
+                <motion.div key={title} {...reveal} transition={{ ...reveal.transition, delay: i * 0.08 }}>
+                  <Link to={to} className="group -m-3 flex gap-4 rounded-2xl p-3 transition-colors hover:bg-white/80">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white transition-transform group-hover:scale-105">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <h3 className="flex items-center gap-1.5 font-extrabold text-slate-950">
+                        {title} <ArrowUpRight className="h-4 w-4 text-slate-300 transition-colors group-hover:text-slate-900" />
+                      </h3>
+                      <p className="mt-1 text-sm leading-6 text-slate-500">{text}</p>
+                    </div>
+                  </Link>
                 </motion.div>
               ))}
             </div>
