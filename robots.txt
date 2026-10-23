@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://sudhabnrj.github.io/Pixavo-Image-Conversion/sitemap.xml
+Sitemap: https://sudhabnrj.github.io/pixavo/sitemap.xml
